@@ -13,7 +13,7 @@ namespace UnityProject.Scripts.DI
         protected override void Configure(IContainerBuilder builder)
         {
             builder.Register<SceneSwitcher>(Lifetime.Singleton);
-            builder.Register<PrefabDataBase>(Lifetime.Singleton);
+            builder.RegisterInstance(_prefabDataBase);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace UnityProject.Scripts.DI
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterEntryPoint<MainMenuEntryPoint>();
-            builder.Register<MainMenuService>(Lifetime.Singleton);
+            builder.Register<MainMenuUIPresenter>(Lifetime.Singleton);
             builder.RegisterComponent(_mainMenuUI);
         }
     }
