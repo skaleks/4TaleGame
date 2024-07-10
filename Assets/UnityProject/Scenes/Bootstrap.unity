@@ -176,6 +176,14 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1625964633411545676, guid: c06bec5a318aadc4c8ff7ccbd0e39d90, type: 3}
+      propertyPath: _cardDataBase
+      value: 
+      objectReference: {fileID: 11400000, guid: 8c8ff847596fd9f45ac462f0363d156f, type: 2}
+    - target: {fileID: 1625964633411545676, guid: c06bec5a318aadc4c8ff7ccbd0e39d90, type: 3}
+      propertyPath: _defaultProfile
+      value: 
+      objectReference: {fileID: 11400000, guid: 2360e6b61dfbf7f4b947d336c1957d7a, type: 2}
+    - target: {fileID: 1625964633411545676, guid: c06bec5a318aadc4c8ff7ccbd0e39d90, type: 3}
       propertyPath: autoInjectGameObjects.Array.size
       value: 1
       objectReference: {fileID: 0}

@@ -437,23 +437,14 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1234142651369825743, guid: 16966e4586776584186a4c4c0c189aad, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2874407389010930486}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 16966e4586776584186a4c4c0c189aad, type: 3}
---- !u!1 &2874407389010930485 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1234142651369825743, guid: 16966e4586776584186a4c4c0c189aad, type: 3}
+--- !u!114 &2874407389010930485 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4279339452960450161, guid: 16966e4586776584186a4c4c0c189aad, type: 3}
   m_PrefabInstance: {fileID: 2874407389010930484}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2874407389010930486
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2874407389010930485}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ddfa60e0d9294c4bb0425b84f14f7497, type: 3}
@@ -470,7 +461,7 @@ PrefabInstance:
     - target: {fileID: 964846434090039794, guid: 9b8fe0feb30dcfd4fb9a2605fd0891f2, type: 3}
       propertyPath: _gameplayUI
       value: 
-      objectReference: {fileID: 2874407389010930486}
+      objectReference: {fileID: 2874407389010930485}
     - target: {fileID: 8597728639190677401, guid: 9b8fe0feb30dcfd4fb9a2605fd0891f2, type: 3}
       propertyPath: m_Name
       value: GameplayLifetimeScope

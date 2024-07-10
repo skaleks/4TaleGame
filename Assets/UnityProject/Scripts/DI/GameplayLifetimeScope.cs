@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityProject.Scripts.Gameplay;
+using UnityProject.Scripts.Gameplay.Controller;
 using UnityProject.Scripts.UI;
 using VContainer;
 using VContainer.Unity;
@@ -12,8 +14,16 @@ namespace UnityProject.Scripts.DI
         protected override void Configure(IContainerBuilder builder)
         {
             builder.RegisterEntryPoint<GameplayEntryPoint>();
-            builder.Register<GameplayUIPresenter>(Lifetime.Singleton);
             builder.RegisterComponent(_gameplayUI);
+            
+            builder.Register<GameplayUIPresenter>(Lifetime.Singleton);
+            builder.Register<CharacterSpawner>(Lifetime.Singleton);
+            builder.Register<RoomController>(Lifetime.Singleton);
+            builder.Register<PlayerController>(Lifetime.Singleton);
+            builder.Register<EnemyController>(Lifetime.Singleton);
+            builder.Register<DeckController>(Lifetime.Singleton);
+            builder.Register<CardPresenter>(Lifetime.Singleton);
+            builder.Register<BattleController>(Lifetime.Singleton);
         }
     }
 }
