@@ -15,19 +15,10 @@ MonoBehaviour:
   _cards:
   - CardType: 0
     Cost: 1
-    Value: 10
-  - CardType: 0
-    Cost: 2
     Value: 20
   - CardType: 1
-    Cost: 2
-    Value: 5
-  - CardType: 1
-    Cost: 4
-    Value: 15
-  - CardType: 2
-    Cost: 2
+    Cost: 1
     Value: 10
   - CardType: 2
-    Cost: 5
+    Cost: 2
     Value: 30

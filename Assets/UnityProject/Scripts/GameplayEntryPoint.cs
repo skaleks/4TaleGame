@@ -7,7 +7,7 @@ using VContainer.Unity;
 
 namespace UnityProject.Scripts
 {
-    public class GameplayEntryPoint : IStartable
+    public sealed class GameplayEntryPoint : IStartable
     {
         [Inject] private readonly GameplayUIPresenter _gameplayUIPresenter;
         [Inject] private readonly PrefabDataBase _prefabDataBase;
@@ -16,6 +16,7 @@ namespace UnityProject.Scripts
         [Inject] private readonly PlayerController _playerController;
         [Inject] private readonly EnemyController _enemyController;
         [Inject] private readonly DeckController _deckController;
+        [Inject] private readonly BattleController _battleController;
 
         public void Start()
         {
@@ -23,7 +24,7 @@ namespace UnityProject.Scripts
             _roomController.InstantiateRoom();
             _playerController.Initialize();
             _enemyController.Initialize();
-            _deckController.InstantiateDeck();
+            _deckController.Initialize();
         }
     }
 }

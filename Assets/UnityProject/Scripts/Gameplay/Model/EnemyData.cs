@@ -2,7 +2,8 @@
 {
     public class EnemyData
     {
-        public float Health;
         public float MaxHealth;
+        public float Health;
+        public float Armor;
     }
 }

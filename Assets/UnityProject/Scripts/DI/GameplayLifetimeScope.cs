@@ -22,7 +22,6 @@ namespace UnityProject.Scripts.DI
             builder.Register<PlayerController>(Lifetime.Singleton);
             builder.Register<EnemyController>(Lifetime.Singleton);
             builder.Register<DeckController>(Lifetime.Singleton);
-            builder.Register<CardPresenter>(Lifetime.Singleton);
             builder.Register<BattleController>(Lifetime.Singleton);
         }
     }

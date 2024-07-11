@@ -8,6 +8,7 @@ namespace UnityProject.Scripts.Gameplay.Model
         public int Health;
         public int MaxHealth;
         public int Energy;
+        public int Armor;
         public int DeckCapacity;
     }
 }

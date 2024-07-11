@@ -1,54 +1,115 @@
-﻿using UnityEngine;
-using UnityEngine.Pool;
+﻿using System;
+using System.Collections.Generic;
 using UnityProject.Scripts.Data;
 using UnityProject.Scripts.UI;
 using VContainer;
 using VContainer.Unity;
+using Random = UnityEngine.Random;
 
 namespace UnityProject.Scripts.Gameplay.Controller
 {
-    public sealed class DeckController
+    public sealed class DeckController : IDisposable
     {
+        [Inject] private DefaultProfile _defaultProfile;
         [Inject] private PrefabDataBase _prefabDataBase;
         [Inject] private CardDataBase _cardDataBase;
         [Inject] private IObjectResolver _container;
         [Inject] private GameplayUIPresenter _gameplayUI;
+        
+        private Queue<Card> _deck = new();
+        private List<Card> _hand = new();
+        private List<Card> _discard = new();
+        private bool _cardChoosen;
 
-        private ObjectPool<Card> _deckPool;
-
-        public void InstantiateDeck()
+        public void Initialize()
         {
-            _deckPool = new ObjectPool<Card>(CreateFunc, actionOnGet: Get, actionOnRelease: Release);
-            GetNewCard(5);
+            _gameplayUI.OnCardInteract += DoAction;
+            InstantiateDeck();
+            PrepareUI();
+            PrepareHand(5);
         }
 
-        public void GetNewCard(int amount)
+        public void Dispose()
         {
-            for (int i = 0; i < amount; i++)
+            _gameplayUI.OnCardInteract -= DoAction;
+        }
+        
+        public void InstantiateDeck()
+        {
+            for (int i = 0; i < _defaultProfile.PlayerData.DeckCapacity; i++)
             {
-                var card = _deckPool.Get();
-                _gameplayUI.AddCard(card);
+                Create();
             }
         }
 
-        private void Get(Card obj)
+        private void PrepareUI()
+        {
+            _gameplayUI.RegisterCards(_deck);
+        }
+        
+        public void Clear()
+        {
+            _deck.Clear();
+            _discard.Clear();
+        }
+
+        private void PrepareHand(int amount)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                var card = _deck.Dequeue();
+                _hand.Add(card);
+            }
+            _gameplayUI.ShowHand(_hand);
+        }
+
+        public void Shuffle()
+        {
+            foreach (var card in _discard)
+            {
+                _deck.Enqueue(card);
+            }
+            
+            _discard.Clear();
+        }
+
+        private void Create()
         {
             var cardData = _cardDataBase.Cards[Random.Range(0, _cardDataBase.Cards.Count)];
             
-            obj.CostText.text = cardData.Cost.ToString();
-            obj.TypeText.text = cardData.CardType.ToString();
-            obj.ValueText.text = cardData.Value.ToString();
-            obj.gameObject.SetActive(true);
+            var card = _container.Instantiate(_prefabDataBase.Card);
+            card.gameObject.SetActive(false);
+            card.CostText.text = cardData.Cost.ToString();
+            card.TypeText.text = cardData.CardType.ToString();
+            card.ValueText.text = cardData.Value.ToString();
+            card.CardData = cardData;
+            
+            _deck.Enqueue(card);
+        }
+        
+        private void DoAction(Card card)
+        {
+            if (_cardChoosen)
+            {
+                ActivateCard(card);
+                return;
+            }
+            
+            _gameplayUI.HighlightCard(card);
+            _cardChoosen = true;
         }
 
-        private void Release(Card obj)
+        private void ActivateCard(Card card)
         {
-            obj.gameObject.SetActive(false);
+            _gameplayUI.ActivateCard(card);
+            DiscardCard(card);
+            _cardChoosen = false;
         }
 
-        private Card CreateFunc()
+        private void DiscardCard(Card card)
         {
-            return _container.Instantiate(_prefabDataBase.Card);
+            _hand.Remove(card);
+            _discard.Add(card);
         }
     }
 }
