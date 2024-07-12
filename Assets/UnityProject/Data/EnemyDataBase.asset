@@ -16,6 +16,8 @@ MonoBehaviour:
   - MaxHealth: 50
     Health: 50
     Armor: 10
+    ActionValue: 10
   - MaxHealth: 100
     Health: 100
     Armor: 0
+    ActionValue: 10

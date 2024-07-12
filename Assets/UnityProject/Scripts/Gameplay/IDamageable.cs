@@ -1,7 +1,9 @@
-﻿namespace UnityProject.Scripts.Gameplay
+﻿using UnityProject.Scripts.Gameplay.View;
+
+namespace UnityProject.Scripts.Gameplay
 {
-    public interface IDamageable
+    public interface IDamageHandler
     {
-        void Damage(float value);
+        void Damage(float value, Character character = null);
     }
 }

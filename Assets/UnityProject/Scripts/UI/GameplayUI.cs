@@ -11,7 +11,7 @@ namespace UnityProject.Scripts.UI
         [SerializeField] private TMP_Text _discardCount;
         [SerializeField] private TMP_Text _deckCount;
         [SerializeField] private TMP_Text _actionPointsText;
-        [SerializeField] private Image _actionPointsImage;
+        [SerializeField] private TMP_Text _gameOverText;
         [SerializeField] private RectTransform _cardPlaceHolder;
 
         public Button BackToMainMenuButton => _backToMainMenuButton;
@@ -19,7 +19,7 @@ namespace UnityProject.Scripts.UI
         public TMP_Text DiscardCount => _discardCount;
         public TMP_Text DeckCount => _deckCount;
         public TMP_Text ActionPointsText => _actionPointsText;
-        public Image ActionPointsImage => _actionPointsImage;
         public RectTransform CardPlaceHolder => _cardPlaceHolder;
+        public TMP_Text GameOverText => _gameOverText;
     }
 }

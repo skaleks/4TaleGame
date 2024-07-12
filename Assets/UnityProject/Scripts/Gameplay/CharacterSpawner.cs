@@ -16,7 +16,7 @@ namespace UnityProject.Scripts.Gameplay
             return _container.Instantiate(_prefabDataBase.Player, position, Quaternion.identity);
         }
 
-        public Character InstantiateEnemy(Vector3 position)
+        public Enemy InstantiateEnemy(Vector3 position)
         {
             return _container.Instantiate(_prefabDataBase.Enemy, position, Quaternion.identity);
         }

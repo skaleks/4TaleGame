@@ -17,4 +17,4 @@ MonoBehaviour:
     MaxHealth: 100
     Energy: 10
     Armor: 0
-    DeckCapacity: 5
+    DeckCapacity: 15

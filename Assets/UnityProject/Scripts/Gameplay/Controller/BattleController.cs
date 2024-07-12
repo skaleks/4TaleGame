@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using UnityProject.Scripts.Common;
+using UnityProject.Scripts.Common.Enums;
 using UnityProject.Scripts.Enums;
+using UnityProject.Scripts.Gameplay.View;
 using UnityProject.Scripts.UI;
 using VContainer;
 using VContainer.Unity;
@@ -13,12 +19,16 @@ namespace UnityProject.Scripts.Gameplay.Controller
         [Inject] private EnemyController _enemyController;
         [Inject] private DeckController _deckController;
         [Inject] private GameplayUIPresenter _gameplayUI;
+        [Inject] private SceneSwitcher _sceneSwitcher;
 
-        private bool _cardChoosen;
+        private CancellationTokenSource _cancellationTokenSource;
         private Turn TurnOrder { get; set; } = Turn.Player;
         
         public void Initialize()
         {
+            _cancellationTokenSource = new CancellationTokenSource();
+            _playerController.OnPlayerDead += async () => await Finish();
+            _enemyController.OnAllEnemiesDead += async () => await Finish();
             _gameplayUI.OnCardInteract += OnCardInteract;
             _gameplayUI.OnCardActivate += OnCardActivate;
             _gameplayUI.OnEndTurnButtonClick += SwitchTurn;
@@ -30,6 +40,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
             _gameplayUI.OnCardInteract -= OnCardInteract;
             _gameplayUI.OnCardActivate -= OnCardActivate;
             _gameplayUI.OnEndTurnButtonClick -= SwitchTurn;
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
         }
 
         private void StartBattle()
@@ -49,8 +61,16 @@ namespace UnityProject.Scripts.Gameplay.Controller
             _gameplayUI.SetDeckCount(_deckController.Deck.Count);
         }
 
-        private void Finish()
+        private async UniTask Finish()
         {
+            if (_playerController.GetHealth() <= 0)
+            {
+                _gameplayUI.ShowGameOver();
+                await UniTask.WaitForSeconds(2, cancellationToken: _cancellationTokenSource.Token);
+                _deckController.Clear();
+                _sceneSwitcher.Switch(SceneType.MainMenu);
+            }
+            
             _roomController.InstantiateRoom();
         }
 
@@ -61,13 +81,16 @@ namespace UnityProject.Scripts.Gameplay.Controller
             if (TurnOrder == Turn.Enemy)
             {
                 _gameplayUI.TurnButtonEnable = false;
-                EnemyAction(_enemyController.Action());
+                _gameplayUI.HideHand(_deckController.Hand);
+                _deckController.DiscardAllHand();
+                _gameplayUI.SetDiscardCount(_deckController.Discard.Count);
+                EnemyTurn(_enemyController.GetEnemyActions());
             }
             else
             {
                 TryShuffle();
                 _deckController.GetHand(5);
-                _playerController.ChangeEnergy(5);
+                _playerController.ResetEnergy();
                 _gameplayUI.ShowHand(_deckController.Hand);
                 _gameplayUI.SetDeckCount(_deckController.Deck.Count);
                 _gameplayUI.SetEnergyCount(_playerController.GetEnergy());
@@ -107,7 +130,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             switch (data.CardType)
             {
                 case ActionType.Attack:
-                    _enemyController.ChangeHealth(-data.Value);
+                    _enemyController.Damage(-data.Value, card.Target);
                     break;
                 case ActionType.Defense:
                     _playerController.ChangeArmor(data.Value);
@@ -128,20 +151,23 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
         }
 
-        private void EnemyAction(EnemyAction enemyAction)
+        private void EnemyTurn(List<EnemyAction> enemyAction)
         {
-            switch (enemyAction.ActionType)
+            foreach (var action in enemyAction)
             {
-                case ActionType.Attack:
-                    _playerController.Damage(-enemyAction.Value);
-                    break;
-                case ActionType.Defense:
-                    _enemyController.ChangeArmor(enemyAction.Value);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (action.ActionType)
+                {
+                    case ActionType.Attack:
+                        _playerController.Damage(-action.Value);
+                        break;
+                    case ActionType.Defense:
+                        _enemyController.ChangeArmor(action.Enemy, action.Value);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
-            
+
             SwitchTurn();
         }
         
@@ -154,15 +180,10 @@ namespace UnityProject.Scripts.Gameplay.Controller
         {
             return _deckController.Hand.Count <= 0;
         }
-        
-        private bool CheckEnemiesDefeated()
-        {
-            return _enemyController.AllEnemiesDefeated;
-        }
 
         private bool CheckSwitchTurnConditions()
         {
-            return CheckEmptyHand() || CheckEnemiesDefeated() || _playerController.GetEnergy() <= 0;
+            return CheckEmptyHand() || _playerController.GetEnergy() <= 0;
         }
     }
 }

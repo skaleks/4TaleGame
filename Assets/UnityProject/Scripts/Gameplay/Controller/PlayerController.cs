@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityProject.Scripts.Data;
 using UnityProject.Scripts.Gameplay.Model;
 using UnityProject.Scripts.Gameplay.View;
@@ -6,7 +7,7 @@ using VContainer;
 
 namespace UnityProject.Scripts.Gameplay.Controller
 {
-    public sealed class PlayerController : IDamageable
+    public sealed class PlayerController : IDamageHandler
     {
         [Inject] private DefaultProfile _defaultProfile;
         [Inject] private CharacterSpawner _characterSpawner;
@@ -14,6 +15,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         private Character _playerView;
         private PlayerData _playerData;
+
+        public event Action OnPlayerDead;
         
         public void Initialize()
         {
@@ -35,6 +38,11 @@ namespace UnityProject.Scripts.Gameplay.Controller
         {
             _playerData.Health = Mathf.Clamp(_playerData.Health + value, 0, _playerData.MaxHealth);
             ChangeHealthView();
+
+            if (_playerData.Health <= 0)
+            {
+                OnPlayerDead?.Invoke();
+            }
         }
 
         private void ChangeHealthView()
@@ -66,10 +74,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 restValue = _playerData.Armor;
                 _playerData.Armor = 0;
             }
-
-            var size = _playerView.ArmorBar.size;
-            size = new Vector2(_playerData.Armor / 100, size.y);
-            _playerView.ArmorBar.size = size;
+            
+            ChangeArmorView();
 
             return restValue;
         }
@@ -77,7 +83,13 @@ namespace UnityProject.Scripts.Gameplay.Controller
         public float GetHealth() => _playerData.Health;
         public float GetEnergy() => _playerData.Energy;
         public int GetDeckCapacity() => _playerData.DeckCapacity;
-        public void Damage(float value)
+
+        public void ResetEnergy()
+        {
+            _playerData.Energy = _defaultProfile.PlayerData.Energy;
+        }
+
+        public void Damage(float value, Character character = null)
         {
             if (_playerData.Armor > 0)
             {

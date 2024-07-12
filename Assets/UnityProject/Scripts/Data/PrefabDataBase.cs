@@ -9,12 +9,12 @@ namespace UnityProject.Scripts.Data
     public class PrefabDataBase : ScriptableObject
     {
         [SerializeField] private Character _player;
-        [SerializeField] private Character _enemy;
+        [SerializeField] private Enemy _enemy;
         [SerializeField] private List<Room> _rooms;
         [SerializeField] private Card _card;
 
         public Character Player => _player;
-        public Character Enemy => _enemy;
+        public Enemy Enemy => _enemy;
         public List<Room> Rooms => _rooms;
         public Card Card => _card;
     }

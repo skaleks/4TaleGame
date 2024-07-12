@@ -63,6 +63,7 @@ MonoBehaviour:
     Cost: 0
     Value: 0
   IsChoosen: 0
+  Target: {fileID: 0}
 --- !u!114 &4088666176826676680
 MonoBehaviour:
   m_ObjectHideFlags: 0

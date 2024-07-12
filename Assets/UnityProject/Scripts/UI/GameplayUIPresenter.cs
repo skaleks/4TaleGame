@@ -77,6 +77,15 @@ namespace UnityProject.Scripts.UI
             }
         }
 
+        public void HideHand(List<Card> hand)
+        {
+            foreach (var card in hand)
+            {
+                card.RectTransform.SetParent(null);
+                card.gameObject.SetActive(false);
+            }
+        }
+
         public void ActivateCard(Card card)
         {
             card.gameObject.SetActive(false);
@@ -85,7 +94,7 @@ namespace UnityProject.Scripts.UI
             
             OnCardActivate?.Invoke(card);
         }
-        
+
         public void HighlightCard(Card card)
         {
             _chosenCard = card;
@@ -100,6 +109,11 @@ namespace UnityProject.Scripts.UI
             
             _chosenCard.IsChoosen = false;
             _chosenCard.RectTransform.SetParent(_gameplayUI.CardPlaceHolder);
+        }
+
+        public void ShowGameOver()
+        {
+            _gameplayUI.GameOverText.enabled = true;
         }
 
         private void BackToMainMenu() => _sceneSwitcher.Switch(SceneType.MainMenu);

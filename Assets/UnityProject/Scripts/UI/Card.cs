@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityProject.Scripts.Gameplay.Model;
+using UnityProject.Scripts.Gameplay.View;
 
 namespace UnityProject.Scripts.UI
 {
@@ -13,17 +14,14 @@ namespace UnityProject.Scripts.UI
         [SerializeField] private TMP_Text _valueText;
         [SerializeField] private TMP_Text _typeText;
         
-        [HideInInspector]
-        public CardData CardData;
-        [HideInInspector]
-        public bool IsChoosen;
-        
+        [HideInInspector] public CardData CardData;
+        [HideInInspector] public bool IsChoosen;
+        [HideInInspector] public Character Target;
+
         public RectTransform RectTransform => _rectTransform;
         public Button CardButton => _cardButton;
         public TMP_Text CostText => _costText;
         public TMP_Text ValueText => _valueText;
         public TMP_Text TypeText => _typeText;
-
-        
     }
 }

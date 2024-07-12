@@ -8,5 +8,6 @@ namespace UnityProject.Scripts.Gameplay.Model
         public float MaxHealth;
         public float Health;
         public float Armor;
+        public float ActionValue;
     }
 }

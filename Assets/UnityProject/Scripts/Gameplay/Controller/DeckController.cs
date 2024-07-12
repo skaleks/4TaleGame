@@ -58,6 +58,16 @@ namespace UnityProject.Scripts.Gameplay.Controller
             Hand.Remove(card);
             Discard.Add(card);
         }
+
+        public void DiscardAllHand()
+        {
+            foreach (var card in Hand)
+            {
+                Discard.Add(card);
+            }
+            
+            Hand.Clear();
+        }
         
         private void Create()
         {
