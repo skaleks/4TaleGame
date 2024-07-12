@@ -50,6 +50,9 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   _prefabDataBase: {fileID: 11400000, guid: dadc183bdf18a1a4fa1a34c00bc89a8d, type: 2}
+  _cardDataBase: {fileID: 11400000, guid: 8c8ff847596fd9f45ac462f0363d156f, type: 2}
+  _enemyDataBase: {fileID: 11400000, guid: fe3474b2d13277a449c3003e574b642d, type: 2}
+  _defaultProfile: {fileID: 11400000, guid: 2360e6b61dfbf7f4b947d336c1957d7a, type: 2}
 --- !u!114 &2130030209964479603
 MonoBehaviour:
   m_ObjectHideFlags: 0

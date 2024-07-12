@@ -1,6 +1,6 @@
 ﻿namespace UnityProject.Scripts.Enums
 {
-    public enum CardType
+    public enum ActionType
     {
         Attack,
         Defense,

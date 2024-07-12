@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4334983ea60343fa853b148c2917525b, type: 3}
-  m_Name: DefaultProfile
+  m_Script: {fileID: 11500000, guid: b1db1480636841aebdb7477f9955f034, type: 3}
+  m_Name: EnemyDataBase
   m_EditorClassIdentifier: 
-  _playerData:
+  _enemyData:
+  - MaxHealth: 50
+    Health: 50
+    Armor: 10
+  - MaxHealth: 100
     Health: 100
-    MaxHealth: 100
-    Energy: 10
     Armor: 0
-    DeckCapacity: 5

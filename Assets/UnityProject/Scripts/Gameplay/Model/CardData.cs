@@ -6,7 +6,7 @@ namespace UnityProject.Scripts.Gameplay.Model
     [Serializable]
     public sealed class CardData
     {
-        public CardType CardType;
+        public ActionType CardType;
         public int Cost;
         public int Value;
     }

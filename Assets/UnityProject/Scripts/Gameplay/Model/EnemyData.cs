@@ -1,5 +1,8 @@
-﻿namespace UnityProject.Scripts.Gameplay.Model
+﻿using System;
+
+namespace UnityProject.Scripts.Gameplay.Model
 {
+    [Serializable]
     public class EnemyData
     {
         public float MaxHealth;

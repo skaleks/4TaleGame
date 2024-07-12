@@ -10,6 +10,7 @@ namespace UnityProject.Scripts.DI
     {
         [SerializeField] private PrefabDataBase _prefabDataBase;
         [SerializeField] private CardDataBase _cardDataBase;
+        [SerializeField] private EnemyDataBase _enemyDataBase;
         [SerializeField] private DefaultProfile _defaultProfile;
         
         protected override void Configure(IContainerBuilder builder)
@@ -18,6 +19,7 @@ namespace UnityProject.Scripts.DI
             builder.RegisterInstance(_defaultProfile);
             builder.RegisterInstance(_prefabDataBase);
             builder.RegisterInstance(_cardDataBase);
+            builder.RegisterInstance(_enemyDataBase);
         }
     }
 }

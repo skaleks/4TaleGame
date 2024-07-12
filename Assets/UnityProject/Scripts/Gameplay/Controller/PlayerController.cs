@@ -1,19 +1,15 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityProject.Scripts.Data;
-using UnityProject.Scripts.Enums;
 using UnityProject.Scripts.Gameplay.Model;
 using UnityProject.Scripts.Gameplay.View;
-using UnityProject.Scripts.UI;
 using VContainer;
 
 namespace UnityProject.Scripts.Gameplay.Controller
 {
-    public sealed class PlayerController : IDisposable
+    public sealed class PlayerController : IDamageable
     {
         [Inject] private DefaultProfile _defaultProfile;
         [Inject] private CharacterSpawner _characterSpawner;
-        [Inject] private GameplayUIPresenter _uiPresenter;
         [Inject] private RoomController _roomController;
 
         private Character _playerView;
@@ -22,65 +18,73 @@ namespace UnityProject.Scripts.Gameplay.Controller
         public void Initialize()
         {
             _playerView = _characterSpawner.InstantiatePlayer(_roomController.Room.PlayerSpawnPoint.position);
-            _playerData = _defaultProfile.PlayerData;
+            _playerData = new PlayerData
+            {
+                Armor = _defaultProfile.PlayerData.Armor,
+                DeckCapacity = _defaultProfile.PlayerData.DeckCapacity,
+                Energy = _defaultProfile.PlayerData.Energy,
+                Health = _defaultProfile.PlayerData.Health,
+                MaxHealth = _defaultProfile.PlayerData.MaxHealth
+            };
             
-            _uiPresenter.SetActionPoints(_playerData.Energy);
-            _uiPresenter.SetDeckCount(_playerData.DeckCapacity);
-            _uiPresenter.SetDiscardCount(0);
-            _uiPresenter.OnCardActivate += OnCardActivate;
+            ChangeHealthView();
+            ChangeArmorView();
         }
 
-        public void Dispose()
+        public void ChangeHealth(float value)
         {
-            _uiPresenter.OnCardActivate -= OnCardActivate;
+            _playerData.Health = Mathf.Clamp(_playerData.Health + value, 0, _playerData.MaxHealth);
+            ChangeHealthView();
         }
-        
-        private void OnCardActivate(Card card)
+
+        private void ChangeHealthView()
         {
-            var data = card.CardData;
-            switch (data.CardType)
-            {
-                case CardType.Attack:
-                    break;
-                case CardType.Defense:
-                    ChangeArmor(data.Value);
-                    break;
-                case CardType.Healing:
-                    ChangeHealth(data.Value);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        
-        public void ChangeHealth(int value)
-        {
-            _playerData.Health += value;
-            
             var size = _playerView.HealthBar.size;
-            size = new Vector2(size.x / 100 * _playerData.Health, size.y);
+            size = new Vector2(_playerData.Health / 100, size.y);
             _playerView.HealthBar.size = size;
         }
         
-        public void ChangeEnergy(int value)
+        private void ChangeArmorView()
         {
-            _playerData.Energy += value;
-            _uiPresenter.SetActionPoints(_playerData.Energy);
-        }
-        
-        public void ChangeArmor(int value)
-        {
-            _playerData.Armor += value;
-            
             var size = _playerView.ArmorBar.size;
-            size = new Vector2(size.x / 100 * _playerData.Armor, size.y);
+            size = new Vector2(_playerData.Armor / 100, size.y);
             _playerView.ArmorBar.size = size;
         }
 
-        public int GetHealth() => _playerData.Health;
-        public int GetEnergy() => _playerData.Energy;
+        public void ChangeEnergy(float value)
+        {
+            _playerData.Energy += value;
+        }
+        
+        public float ChangeArmor(float value)
+        {
+            _playerData.Armor += value;
+
+            var restValue = 0f;
+            if (_playerData.Armor < 0)
+            {
+                restValue = _playerData.Armor;
+                _playerData.Armor = 0;
+            }
+
+            var size = _playerView.ArmorBar.size;
+            size = new Vector2(_playerData.Armor / 100, size.y);
+            _playerView.ArmorBar.size = size;
+
+            return restValue;
+        }
+
+        public float GetHealth() => _playerData.Health;
+        public float GetEnergy() => _playerData.Energy;
         public int GetDeckCapacity() => _playerData.DeckCapacity;
-
-
+        public void Damage(float value)
+        {
+            if (_playerData.Armor > 0)
+            {
+                value = ChangeArmor(value);
+            }
+            
+            ChangeHealth(value);
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace UnityProject.Scripts
             _roomController.InstantiateRoom();
             _playerController.Initialize();
             _enemyController.Initialize();
-            _deckController.Initialize();
+            _battleController.Initialize();
         }
     }
 }

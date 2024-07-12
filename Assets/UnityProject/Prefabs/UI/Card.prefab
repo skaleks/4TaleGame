@@ -58,6 +58,11 @@ MonoBehaviour:
   _costText: {fileID: 8272497180848323233}
   _valueText: {fileID: 7615063865691756468}
   _typeText: {fileID: 8036611719435968277}
+  CardData:
+    CardType: 0
+    Cost: 0
+    Value: 0
+  IsChoosen: 0
 --- !u!114 &4088666176826676680
 MonoBehaviour:
   m_ObjectHideFlags: 0

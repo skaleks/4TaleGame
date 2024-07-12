@@ -5,10 +5,10 @@ namespace UnityProject.Scripts.Gameplay.Model
     [Serializable]
     public sealed class PlayerData
     {
-        public int Health;
-        public int MaxHealth;
-        public int Energy;
-        public int Armor;
+        public float Health;
+        public float MaxHealth;
+        public float Energy;
+        public float Armor;
         public int DeckCapacity;
     }
 }
