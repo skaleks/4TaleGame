@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityProject.Scripts.Common;
 using UnityProject.Scripts.Common.Enums;
+using UnityProject.Scripts.Data;
+using UnityProject.Scripts.Enums;
 using VContainer;
+using Object = UnityEngine.Object;
 
 namespace UnityProject.Scripts.UI
 {
@@ -12,25 +18,29 @@ namespace UnityProject.Scripts.UI
     {
         [Inject] private SceneSwitcher _sceneSwitcher;
         [Inject] private GameplayUI _gameplayUI;
+        [Inject] private PrefabDataBase _prefabDataBase;
 
         private HorizontalLayoutGroup _cardPlaceholderLayout;
         private const int MaxCardsInHand = 10;
         private int _discardCount;
-        private Queue<Card> _deck;
-        private Card _chosenCard;
+        private CancellationTokenSource _cancellationTokenSource;
+        private Arrow _arrow;
 
         public bool TurnButtonEnable
         {
             private get => _gameplayUI.EndTurnButton.enabled;
             set => _gameplayUI.EndTurnButton.enabled = value;
         }
-
+        
         public event Action<Card> OnCardInteract;
         public event Action<Card> OnCardActivate;
         public event Action OnEndTurnButtonClick;
 
         public void Initialize()
         {
+            _arrow = Object.Instantiate(_prefabDataBase.Arrow, _gameplayUI.transform);
+            _arrow.gameObject.SetActive(false);
+            _cancellationTokenSource = new CancellationTokenSource();
             _cardPlaceholderLayout = _gameplayUI.CardPlaceHolder.GetComponent<HorizontalLayoutGroup>();
             _gameplayUI.BackToMainMenuButton.onClick.AddListener(BackToMainMenu);
             _gameplayUI.EndTurnButton.onClick.AddListener(EndTurn);
@@ -40,22 +50,22 @@ namespace UnityProject.Scripts.UI
         {
             _gameplayUI.BackToMainMenuButton.onClick.RemoveListener(BackToMainMenu);
             _gameplayUI.EndTurnButton.onClick.RemoveListener(EndTurn);
-            
-            foreach (var card in _deck)
-            {
-                card.CardButton.onClick.RemoveListener(() => OnCardInteract?.Invoke(card));
-            }
+
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource.Dispose();
         }
 
         public void RegisterCards(Queue<Card> deck)
         {
-            _deck = deck;
-            
             foreach (var card in deck)
             {
-                card.CardButton.onClick.AddListener(() => OnCardInteract?.Invoke(card));
+                card.OnEndDragAction += OnEndDragAction;
+                card.OnPointDownAction += OnPointDownAction;
+                card.OnPointUpAction += OnPointUpAction;
             }
         }
+
+        public void ShowGameOver() => _gameplayUI.GameOverText.enabled = true;
 
         public void SetEnergyCount(float value) => _gameplayUI.ActionPointsText.text = value.ToString();
         
@@ -97,23 +107,29 @@ namespace UnityProject.Scripts.UI
 
         public void HighlightCard(Card card)
         {
-            _chosenCard = card;
             card.RectTransform.SetParent(_gameplayUI.transform);
             card.RectTransform.anchorMin = card.RectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             card.RectTransform.anchoredPosition = Vector2.zero;
         }
 
-        public void UnHighlightCard()
+        public void EnableArrow(bool value)
         {
-            if (_chosenCard == null) return;
-            
-            _chosenCard.IsChoosen = false;
-            _chosenCard.RectTransform.SetParent(_gameplayUI.CardPlaceHolder);
+            _arrow.gameObject.SetActive(value);
         }
 
-        public void ShowGameOver()
+        private void OnPointUpAction(Card card)
         {
-            _gameplayUI.GameOverText.enabled = true;
+            _cardPlaceholderLayout.enabled = true;
+        }
+
+        private void OnPointDownAction(Card card)
+        {
+            _cardPlaceholderLayout.enabled = false;
+        }
+
+        private void OnEndDragAction(Card card)
+        {
+            OnCardInteract?.Invoke(card);
         }
 
         private void BackToMainMenu() => _sceneSwitcher.Switch(SceneType.MainMenu);

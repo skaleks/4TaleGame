@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityProject.Scripts.Data;
+using UnityProject.Scripts.Gameplay.Model;
 using UnityProject.Scripts.UI;
 using VContainer;
 using VContainer.Unity;
@@ -14,9 +15,9 @@ namespace UnityProject.Scripts.Gameplay.Controller
         [Inject] private CardDataBase _cardDataBase;
         [Inject] private IObjectResolver _container;
 
-        public Queue<Card> Deck { get; private set; } = new();
-        public List<Card> Hand { get; private set; } = new();
-        public List<Card> Discard { get; private set; } = new();
+        public Queue<Card> Deck { get; } = new();
+        public List<Card> Hand { get; } = new();
+        public List<Card> Discard { get; } = new();
 
         
         public void InstantiateDeck()
@@ -72,14 +73,10 @@ namespace UnityProject.Scripts.Gameplay.Controller
         private void Create()
         {
             var cardData = _cardDataBase.Cards[Random.Range(0, _cardDataBase.Cards.Count)];
-            
             var card = _container.Instantiate(_prefabDataBase.Card);
-            card.gameObject.SetActive(false);
-            card.CostText.text = cardData.Cost.ToString();
-            card.TypeText.text = cardData.CardType.ToString();
-            card.ValueText.text = cardData.Value.ToString();
-            card.CardData = cardData;
             
+            card.Initialize(new CardModel(cardData));
+
             Deck.Enqueue(card);
         }
     }

@@ -18,3 +18,4 @@ MonoBehaviour:
   - {fileID: -4351197306023221472, guid: ec4aaf003b7ae3d48b4e244e9fcbf2fd, type: 3}
   - {fileID: -2223079868718583559, guid: 717ab88ab2fed1d458e4b0cd9e09538d, type: 3}
   _card: {fileID: 7681558854038977997, guid: bb46dc2b2d36e8b48b0fc424d524fc65, type: 3}
+  _arrow: {fileID: 8349208425757007603, guid: bc3b496272ecf2b4083ff693be90e104, type: 3}

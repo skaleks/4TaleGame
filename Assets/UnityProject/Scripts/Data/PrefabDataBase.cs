@@ -12,10 +12,13 @@ namespace UnityProject.Scripts.Data
         [SerializeField] private Enemy _enemy;
         [SerializeField] private List<Room> _rooms;
         [SerializeField] private Card _card;
+        [SerializeField] private Arrow _arrow;
+
 
         public Character Player => _player;
         public Enemy Enemy => _enemy;
         public List<Room> Rooms => _rooms;
         public Card Card => _card;
+        public Arrow Arrow => _arrow;
     }
 }

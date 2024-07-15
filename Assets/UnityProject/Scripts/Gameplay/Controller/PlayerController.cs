@@ -7,7 +7,7 @@ using VContainer;
 
 namespace UnityProject.Scripts.Gameplay.Controller
 {
-    public sealed class PlayerController : IDamageHandler
+    public sealed class PlayerController : IDamageHandler, IAnimationHandler
     {
         [Inject] private DefaultProfile _defaultProfile;
         [Inject] private CharacterSpawner _characterSpawner;
@@ -29,7 +29,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 Health = _defaultProfile.PlayerData.Health,
                 MaxHealth = _defaultProfile.PlayerData.MaxHealth
             };
-            
+
+            SetAnimation("Idle", true);
             ChangeHealthView();
             ChangeArmorView();
         }
@@ -66,6 +67,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
         
         public float ChangeArmor(float value)
         {
+            SetAnimation("Skill", false);
             _playerData.Armor += value;
 
             var restValue = 0f;
@@ -76,7 +78,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
             
             ChangeArmorView();
-
+            SetAnimation("Idle", true);
+            
             return restValue;
         }
 
@@ -95,8 +98,15 @@ namespace UnityProject.Scripts.Gameplay.Controller
             {
                 value = ChangeArmor(value);
             }
-            
+
+            SetAnimation("Hit", false);
             ChangeHealth(value);
+            SetAnimation("Idle", true);
+        }
+
+        public void SetAnimation(string name, bool loop, Character character = null)
+        {
+            _playerView.SkeletonAnimation.AnimationState.AddAnimation(0, name, loop, 0f);
         }
     }
 }

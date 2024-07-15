@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: CardDataBase
   m_EditorClassIdentifier: 
   _cards:
-  - CardType: 0
-    Cost: 1
-    Value: 20
-  - CardType: 1
-    Cost: 1
-    Value: 10
-  - CardType: 2
-    Cost: 2
-    Value: 30
+  - _actionType: 0
+    _cost: 1
+    _value: 20
+    _typeImage: {fileID: 1856826321, guid: 91ece539279118a438c900dfb08582ed, type: 3}
+  - _actionType: 1
+    _cost: 1
+    _value: 15
+    _typeImage: {fileID: -1119638910, guid: 91ece539279118a438c900dfb08582ed, type: 3}
+  - _actionType: 2
+    _cost: 2
+    _value: 10
+    _typeImage: {fileID: -342949846, guid: 91ece539279118a438c900dfb08582ed, type: 3}

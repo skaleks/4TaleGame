@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityProject.Scripts.Data;
 using UnityProject.Scripts.Enums;
@@ -11,7 +12,7 @@ using Random = UnityEngine.Random;
 
 namespace UnityProject.Scripts.Gameplay.Controller
 {
-    public sealed class EnemyController : IDamageHandler
+    public sealed class EnemyController : IDamageHandler, IAnimationHandler
     {
         [Inject] private RoomController _roomController;
         [Inject] private CharacterSpawner _characterSpawner;
@@ -19,6 +20,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         private List<Enemy> _enemies = new();
         public event Action OnAllEnemiesDead;
+        private bool _isTargetDefine;
+        private Enemy _targetEnemy;
 
         public void Initialize()
         {
@@ -27,18 +30,19 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 var enemy = _characterSpawner.InstantiateEnemy(spawnPoint.position);
                 var enemyData = _enemyDataBase.EnemyDataList[Random.Range(0, _enemyDataBase.EnemyDataList.Count)];
                 
-                enemy.EnemyData = new EnemyData
+                enemy.Initialize(new EnemyData
                 {
-                    Armor = enemyData.Armor,
+                    ActionValue = enemyData.ActionValue,
+                    Armor =  enemyData.Armor,
                     Health = enemyData.Health,
-                    MaxHealth = enemyData.MaxHealth,
-                    ActionValue = enemyData.ActionValue
-                };
-                
+                    MaxHealth = enemyData.MaxHealth
+                });
+
                 ChangeHealthBar(enemy);
                 ChangeArmorBar(enemy);
                 
                 _enemies.Add(enemy);
+                SetAnimation("Idle", true, enemy);
             }
         }
 
@@ -60,6 +64,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         public float ChangeArmor(Enemy enemy, float value)
         {
+            SetAnimation("Skill", false, enemy);
             enemy.EnemyData.Armor += value;
 
             var restValue = 0f;
@@ -71,6 +76,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             
             ChangeArmorBar(enemy);
 
+            SetAnimation("Idle", true, enemy);
             return restValue;
         }
 
@@ -89,6 +95,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             if (enemy.EnemyData.Health <= 0)
             {
                 _enemies.Remove(enemy);
+                SetAnimation("Dead", false, enemy);
                 Object.Destroy(enemy.gameObject);
             }
 
@@ -108,12 +115,26 @@ namespace UnityProject.Scripts.Gameplay.Controller
         public void Damage(float value, Character character = null)
         {
             var enemy = character as Enemy;
+            SetAnimation("Hit", false, enemy);
             if (enemy.EnemyData.Armor > 0)
             {
                 value = ChangeArmor(enemy, value);
             }
             
             ChangeHealth(enemy, value);
+            SetAnimation("Idle", true, enemy);
+        }
+
+        public async UniTask<Enemy> GetTarget()
+        {
+            await UniTask.WaitUntil(() => _isTargetDefine);
+            _isTargetDefine = false;
+            return _targetEnemy;
+        }
+
+        public void SetAnimation(string name, bool loop, Character enemy)
+        {
+            enemy.SkeletonAnimation.AnimationState.SetAnimation(0, name, loop);
         }
     }
 

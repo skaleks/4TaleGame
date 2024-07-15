@@ -23,14 +23,13 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         private CancellationTokenSource _cancellationTokenSource;
         private Turn TurnOrder { get; set; } = Turn.Player;
-        
+
         public void Initialize()
         {
             _cancellationTokenSource = new CancellationTokenSource();
             _playerController.OnPlayerDead += async () => await Finish();
             _enemyController.OnAllEnemiesDead += async () => await Finish();
             _gameplayUI.OnCardInteract += OnCardInteract;
-            _gameplayUI.OnCardActivate += OnCardActivate;
             _gameplayUI.OnEndTurnButtonClick += SwitchTurn;
             StartBattle();
         }
@@ -38,7 +37,6 @@ namespace UnityProject.Scripts.Gameplay.Controller
         public void Dispose()
         {
             _gameplayUI.OnCardInteract -= OnCardInteract;
-            _gameplayUI.OnCardActivate -= OnCardActivate;
             _gameplayUI.OnEndTurnButtonClick -= SwitchTurn;
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
@@ -49,7 +47,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             _deckController.InstantiateDeck();
             PrepareUI();
         }
-        
+
         private void PrepareUI()
         {
             _gameplayUI.RegisterCards(_deckController.Deck);
@@ -69,6 +67,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 await UniTask.WaitForSeconds(2, cancellationToken: _cancellationTokenSource.Token);
                 _deckController.Clear();
                 _sceneSwitcher.Switch(SceneType.MainMenu);
+                return;
             }
             
             _roomController.InstantiateRoom();
@@ -110,39 +109,50 @@ namespace UnityProject.Scripts.Gameplay.Controller
         {
             if(!CheckPlayerEnergy(card)) return;
             
-            if (card.IsChoosen)
+            OnCardInteractAsync(card).Forget();
+        }
+        
+        private async UniTask OnCardInteractAsync(Card card)
+        {
+            if (card.ActionType == ActionType.Attack)
             {
-                _deckController.DiscardCard(card);
-                _gameplayUI.ActivateCard(card);
-                card.IsChoosen = false;
+                _gameplayUI.HighlightCard(card);
+                _gameplayUI.EnableArrow(true);
+                
+                await UniTask.WaitUntil(() => card.Target != null);
+                
+                _gameplayUI.EnableArrow(false);
+                ActivateCard(card);
                 return;
             }
             
-            _gameplayUI.UnHighlightCard();
             _gameplayUI.HighlightCard(card);
-            card.IsChoosen = true;
+            await UniTask.WaitForSeconds(1f);
+            ActivateCard(card);
         }
 
-        private void OnCardActivate(Card card)
+        private void ActivateCard(Card card)
         {
-            var data = card.CardData;
-            
-            switch (data.CardType)
+            switch (card.ActionType)
             {
                 case ActionType.Attack:
-                    _enemyController.Damage(-data.Value, card.Target);
+                    _playerController.SetAnimation("Attack", false);
+                    _enemyController.Damage(-card.Value, card.Target);
+                    _playerController.SetAnimation("Idle", false);
                     break;
                 case ActionType.Defense:
-                    _playerController.ChangeArmor(data.Value);
+                    _playerController.ChangeArmor(card.Value);
                     break;
                 case ActionType.Healing:
-                    _playerController.ChangeHealth(data.Value);
+                    _playerController.ChangeHealth(card.Value);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
             
-            _playerController.ChangeEnergy(-data.Cost);
+            _deckController.DiscardCard(card);
+            _gameplayUI.ActivateCard(card);
+            _playerController.ChangeEnergy(-card.Cost);
             _gameplayUI.SetEnergyCount(_playerController.GetEnergy());
 
             if (CheckSwitchTurnConditions())
@@ -158,7 +168,9 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 switch (action.ActionType)
                 {
                     case ActionType.Attack:
+                        _enemyController.SetAnimation("Attack", false, action.Enemy);
                         _playerController.Damage(-action.Value);
+                        _enemyController.SetAnimation("Idle", true, action.Enemy);
                         break;
                     case ActionType.Defense:
                         _enemyController.ChangeArmor(action.Enemy, action.Value);
@@ -173,7 +185,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
         
         private bool CheckPlayerEnergy(Card card)
         {
-            return _playerController.GetEnergy() >= card.CardData.Cost;
+            return _playerController.GetEnergy() >= card.Cost;
         }
 
         private bool CheckEmptyHand()
