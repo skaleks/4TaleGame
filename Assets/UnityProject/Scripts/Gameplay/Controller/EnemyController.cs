@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityProject.Scripts.Data;
 using UnityProject.Scripts.Enums;
@@ -25,7 +24,12 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         public void Initialize()
         {
-            foreach (var spawnPoint in _roomController.Room.EnemySpawnPoints)
+            InstantiateEnemies();
+        }
+
+        public void InstantiateEnemies()
+        {
+            foreach (var spawnPoint in _roomController.CurrentRoom.EnemySpawnPoints)
             {
                 var enemy = _characterSpawner.InstantiateEnemy(spawnPoint.position);
                 var enemyData = _enemyDataBase.EnemyDataList[Random.Range(0, _enemyDataBase.EnemyDataList.Count)];
@@ -42,7 +46,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 ChangeArmorBar(enemy);
                 
                 _enemies.Add(enemy);
-                SetAnimation("Idle", true, enemy);
+                PlayAnimation("Idle", true, true, enemy);
             }
         }
 
@@ -64,7 +68,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         public float ChangeArmor(Enemy enemy, float value)
         {
-            SetAnimation("Skill", false, enemy);
+            PlayAnimation("Skill", true, false, enemy);
             enemy.EnemyData.Armor += value;
 
             var restValue = 0f;
@@ -76,7 +80,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             
             ChangeArmorBar(enemy);
 
-            SetAnimation("Idle", true, enemy);
+            PlayAnimation("Idle", false,true, enemy);
             return restValue;
         }
 
@@ -90,12 +94,12 @@ namespace UnityProject.Scripts.Gameplay.Controller
         private void ChangeHealth(Enemy enemy, float value)
         {
             enemy.EnemyData.Health += value;
+            
             ChangeHealthBar(enemy);
             
             if (enemy.EnemyData.Health <= 0)
             {
                 _enemies.Remove(enemy);
-                SetAnimation("Dead", false, enemy);
                 Object.Destroy(enemy.gameObject);
             }
 
@@ -108,33 +112,34 @@ namespace UnityProject.Scripts.Gameplay.Controller
         private void ChangeHealthBar(Enemy enemy)
         {
             var size = enemy.HealthBar.size;
-            size = new Vector2(size.x / 100 * enemy.EnemyData.Health, size.y);
+            size = new Vector2(enemy.EnemyData.Health / enemy.EnemyData.MaxHealth , size.y);
             enemy.HealthBar.size = size;
         }
 
         public void Damage(float value, Character character = null)
         {
             var enemy = character as Enemy;
-            SetAnimation("Hit", false, enemy);
+            PlayAnimation("Hit", true, false, enemy);
+            
             if (enemy.EnemyData.Armor > 0)
             {
                 value = ChangeArmor(enemy, value);
             }
             
             ChangeHealth(enemy, value);
-            SetAnimation("Idle", true, enemy);
+            PlayAnimation("Idle", false,true, enemy);
         }
 
-        public async UniTask<Enemy> GetTarget()
+        public void PlayAnimation(string name, bool replace, bool loop, Character character)
         {
-            await UniTask.WaitUntil(() => _isTargetDefine);
-            _isTargetDefine = false;
-            return _targetEnemy;
-        }
-
-        public void SetAnimation(string name, bool loop, Character enemy)
-        {
-            enemy.SkeletonAnimation.AnimationState.SetAnimation(0, name, loop);
+            if (replace)
+            {
+                character.SkeletonAnimation.AnimationState.SetAnimation(0, name, loop);
+            }
+            else
+            {
+                character.SkeletonAnimation.AnimationState.AddAnimation(0, name, loop, 0f);
+            }
         }
     }
 

@@ -165,6 +165,7 @@ MonoBehaviour:
   _playerSpawnPoint: {fileID: 8458720485180153874}
   _enemySpawnPoints:
   - {fileID: 6346370402657415657}
+  _back: {fileID: 8001968612532154196}
 --- !u!1 &8634803918934590435
 GameObject:
   m_ObjectHideFlags: 0

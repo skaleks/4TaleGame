@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityProject.Scripts.Common;
 using UnityProject.Scripts.Common.Enums;
 using UnityProject.Scripts.Data;
-using UnityProject.Scripts.Enums;
 using VContainer;
 using Object = UnityEngine.Object;
 
@@ -33,23 +31,26 @@ namespace UnityProject.Scripts.UI
         }
         
         public event Action<Card> OnCardInteract;
-        public event Action<Card> OnCardActivate;
         public event Action OnEndTurnButtonClick;
+        public event Action OnStartNewButtonClick;
 
         public void Initialize()
         {
             _arrow = Object.Instantiate(_prefabDataBase.Arrow, _gameplayUI.transform);
             _arrow.gameObject.SetActive(false);
+            _gameplayUI.NewBattleStart.gameObject.SetActive(false);
             _cancellationTokenSource = new CancellationTokenSource();
             _cardPlaceholderLayout = _gameplayUI.CardPlaceHolder.GetComponent<HorizontalLayoutGroup>();
             _gameplayUI.BackToMainMenuButton.onClick.AddListener(BackToMainMenu);
             _gameplayUI.EndTurnButton.onClick.AddListener(EndTurn);
+            _gameplayUI.NewBattleStart.onClick.AddListener(StartBattle);
         }
 
         public void Dispose()
         {
             _gameplayUI.BackToMainMenuButton.onClick.RemoveListener(BackToMainMenu);
             _gameplayUI.EndTurnButton.onClick.RemoveListener(EndTurn);
+            _gameplayUI.NewBattleStart.onClick.AddListener(StartBattle);
 
             _cancellationTokenSource.Cancel();
             _cancellationTokenSource.Dispose();
@@ -101,8 +102,6 @@ namespace UnityProject.Scripts.UI
             card.gameObject.SetActive(false);
             card.transform.SetParent(null);
             SetDiscardCount(++_discardCount);
-            
-            OnCardActivate?.Invoke(card);
         }
 
         public void HighlightCard(Card card)
@@ -115,6 +114,14 @@ namespace UnityProject.Scripts.UI
         public void EnableArrow(bool value)
         {
             _arrow.gameObject.SetActive(value);
+        }
+
+        public void EnableBattleUI(bool value)
+        {
+            _gameplayUI.NewBattleStart.gameObject.SetActive(!value);
+            var enable = value ? 1 : -1;
+            _gameplayUI.BattleContainer.DOMove(
+                _gameplayUI.BattleContainer.position + new Vector3(0, _gameplayUI.BattleContainer.rect.height * enable, 0), 1);
         }
 
         private void OnPointUpAction(Card card)
@@ -135,5 +142,16 @@ namespace UnityProject.Scripts.UI
         private void BackToMainMenu() => _sceneSwitcher.Switch(SceneType.MainMenu);
 
         private void EndTurn() => OnEndTurnButtonClick?.Invoke();
+
+        private void StartBattle()
+        {
+            OnStartNewButtonClick?.Invoke();
+            _gameplayUI.NewBattleStart.gameObject.SetActive(false);
+        }
+
+        public void UnhighlightCard(Card card)
+        {
+            card.RectTransform.SetParent(_gameplayUI.CardPlaceHolder);
+        }
     }
 }

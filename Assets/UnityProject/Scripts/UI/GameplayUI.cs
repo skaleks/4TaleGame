@@ -8,20 +8,22 @@ namespace UnityProject.Scripts.UI
     {
         [SerializeField] private Button _backToMainMenuButton;
         [SerializeField] private Button _endTurnButton;
+        [SerializeField] private Button _newBattleStart;
         [SerializeField] private TMP_Text _discardCount;
         [SerializeField] private TMP_Text _deckCount;
         [SerializeField] private TMP_Text _actionPointsText;
         [SerializeField] private TMP_Text _gameOverText;
-        [SerializeField] private TMP_Text _chooseTarget;
         [SerializeField] private RectTransform _cardPlaceHolder;
+        [SerializeField] private RectTransform _battleContainer;
 
         public Button BackToMainMenuButton => _backToMainMenuButton;
         public Button EndTurnButton => _endTurnButton;
+        public Button NewBattleStart => _newBattleStart;
         public TMP_Text DiscardCount => _discardCount;
         public TMP_Text DeckCount => _deckCount;
         public TMP_Text ActionPointsText => _actionPointsText;
-        public RectTransform CardPlaceHolder => _cardPlaceHolder;
         public TMP_Text GameOverText => _gameOverText;
-        public TMP_Text ChooseTargetText => _chooseTarget;
+        public RectTransform CardPlaceHolder => _cardPlaceHolder;
+        public RectTransform BattleContainer => _battleContainer;
     }
 }

@@ -20,7 +20,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
         public List<Card> Discard { get; } = new();
 
         
-        public void InstantiateDeck()
+        public void Initialize()
         {
             for (int i = 0; i < _defaultProfile.PlayerData.DeckCapacity; i++)
             {

@@ -5,8 +5,8 @@ using Cysharp.Threading.Tasks;
 using UnityProject.Scripts.Common;
 using UnityProject.Scripts.Common.Enums;
 using UnityProject.Scripts.Enums;
-using UnityProject.Scripts.Gameplay.View;
 using UnityProject.Scripts.UI;
+using UnityProject.Scripts.Util;
 using VContainer;
 using VContainer.Unity;
 
@@ -21,16 +21,18 @@ namespace UnityProject.Scripts.Gameplay.Controller
         [Inject] private GameplayUIPresenter _gameplayUI;
         [Inject] private SceneSwitcher _sceneSwitcher;
 
-        private CancellationTokenSource _cancellationTokenSource;
-        private Turn TurnOrder { get; set; } = Turn.Player;
+        private Turn _turnOrder = Turn.Player;
+        private CancellationTokenSource Cts { get; set; }
 
         public void Initialize()
         {
-            _cancellationTokenSource = new CancellationTokenSource();
+            Cts = new CancellationTokenSource();
             _playerController.OnPlayerDead += async () => await Finish();
             _enemyController.OnAllEnemiesDead += async () => await Finish();
             _gameplayUI.OnCardInteract += OnCardInteract;
             _gameplayUI.OnEndTurnButtonClick += SwitchTurn;
+            _gameplayUI.OnStartNewButtonClick += async () => await OnStartNewButtonClickHandler();
+            _gameplayUI.RegisterCards(_deckController.Deck);
             StartBattle();
         }
 
@@ -38,25 +40,38 @@ namespace UnityProject.Scripts.Gameplay.Controller
         {
             _gameplayUI.OnCardInteract -= OnCardInteract;
             _gameplayUI.OnEndTurnButtonClick -= SwitchTurn;
-            _cancellationTokenSource.Cancel();
-            _cancellationTokenSource.Dispose();
+            _gameplayUI.OnStartNewButtonClick -= StartBattle;
+            Cts.Cancel();
+            Cts.Dispose();
+        }
+
+        private async UniTask OnStartNewButtonClickHandler()
+        {
+            if (!await _roomController.NextRoom())
+            {
+                await UniTask.WaitForSeconds(1, cancellationToken: Cts.Token);
+                _sceneSwitcher.Switch(SceneType.MainMenu);
+                return;
+            }
+
+            await _playerController.StartBattleMove();
+            _enemyController.InstantiateEnemies();
+            StartBattle();
         }
 
         private void StartBattle()
         {
-            _deckController.InstantiateDeck();
-            PrepareUI();
+            Prepare();
         }
 
-        private void PrepareUI()
+        private void Prepare()
         {
-            _gameplayUI.RegisterCards(_deckController.Deck);
             _gameplayUI.SetEnergyCount(_playerController.GetEnergy());
-            _gameplayUI.SetDeckCount(_playerController.GetDeckCapacity());
             _gameplayUI.SetDiscardCount(0);
             _deckController.GetHand(5);
             _gameplayUI.ShowHand(_deckController.Hand);
             _gameplayUI.SetDeckCount(_deckController.Deck.Count);
+            _gameplayUI.EnableBattleUI(true);
         }
 
         private async UniTask Finish()
@@ -64,20 +79,26 @@ namespace UnityProject.Scripts.Gameplay.Controller
             if (_playerController.GetHealth() <= 0)
             {
                 _gameplayUI.ShowGameOver();
-                await UniTask.WaitForSeconds(2, cancellationToken: _cancellationTokenSource.Token);
-                _deckController.Clear();
+                await UniTask.WaitForSeconds(2, cancellationToken: Cts.Token);
                 _sceneSwitcher.Switch(SceneType.MainMenu);
+                _deckController.Clear();
                 return;
             }
+
+            await _playerController.FinishBattleMove();
             
-            _roomController.InstantiateRoom();
+            _playerController.ResetEnergy();
+            _gameplayUI.HideHand(_deckController.Hand);
+            _gameplayUI.EnableBattleUI(false);
+            _deckController.DiscardAllHand();
+            _deckController.Shuffle();
         }
 
         private void SwitchTurn()
         {
-            TurnOrder = TurnOrder == Turn.Player ? Turn.Enemy : Turn.Player;
+            _turnOrder = _turnOrder == Turn.Player ? Turn.Enemy : Turn.Player;
             
-            if (TurnOrder == Turn.Enemy)
+            if (_turnOrder == Turn.Enemy)
             {
                 _gameplayUI.TurnButtonEnable = false;
                 _gameplayUI.HideHand(_deckController.Hand);
@@ -87,7 +108,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
             else
             {
-                TryShuffle();
+                TryShuffleDiscard();
                 _deckController.GetHand(5);
                 _playerController.ResetEnergy();
                 _gameplayUI.ShowHand(_deckController.Hand);
@@ -97,7 +118,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
         }
 
-        private void TryShuffle()
+        private void TryShuffleDiscard()
         {
             if (_deckController.Deck.Count >= 5) return;
             
@@ -107,7 +128,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
         private void OnCardInteract(Card card)
         {
-            if(!CheckPlayerEnergy(card)) return;
+            if(Comparator.Less(_playerController.GetEnergy(),card.Cost)) return;
             
             OnCardInteractAsync(card).Forget();
         }
@@ -119,7 +140,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 _gameplayUI.HighlightCard(card);
                 _gameplayUI.EnableArrow(true);
                 
-                await UniTask.WaitUntil(() => card.Target != null);
+                await UniTask.WaitUntil(() => card.Target != null, cancellationToken: Cts.Token);
                 
                 _gameplayUI.EnableArrow(false);
                 ActivateCard(card);
@@ -127,7 +148,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
             
             _gameplayUI.HighlightCard(card);
-            await UniTask.WaitForSeconds(1f);
+            await UniTask.WaitForSeconds(0.5f);
             ActivateCard(card);
         }
 
@@ -136,9 +157,10 @@ namespace UnityProject.Scripts.Gameplay.Controller
             switch (card.ActionType)
             {
                 case ActionType.Attack:
-                    _playerController.SetAnimation("Attack", false);
+                    _playerController.PlayAnimation("Attack", true, false);
                     _enemyController.Damage(-card.Value, card.Target);
-                    _playerController.SetAnimation("Idle", false);
+                    _playerController.PlayAnimation("Idle", false, true);
+                    card.Target = null;
                     break;
                 case ActionType.Defense:
                     _playerController.ChangeArmor(card.Value);
@@ -155,7 +177,8 @@ namespace UnityProject.Scripts.Gameplay.Controller
             _playerController.ChangeEnergy(-card.Cost);
             _gameplayUI.SetEnergyCount(_playerController.GetEnergy());
 
-            if (CheckSwitchTurnConditions())
+            if (Comparator.LessOrEquals(_playerController.GetEnergy(), 0) || 
+                Comparator.LessOrEquals(_deckController.Hand.Count, 0))
             {
                 SwitchTurn();
             }
@@ -168,9 +191,9 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 switch (action.ActionType)
                 {
                     case ActionType.Attack:
-                        _enemyController.SetAnimation("Attack", false, action.Enemy);
+                        _enemyController.PlayAnimation("Attack", true,false, action.Enemy);
                         _playerController.Damage(-action.Value);
-                        _enemyController.SetAnimation("Idle", true, action.Enemy);
+                        _enemyController.PlayAnimation("Idle", false, true, action.Enemy);
                         break;
                     case ActionType.Defense:
                         _enemyController.ChangeArmor(action.Enemy, action.Value);
@@ -181,21 +204,6 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
 
             SwitchTurn();
-        }
-        
-        private bool CheckPlayerEnergy(Card card)
-        {
-            return _playerController.GetEnergy() >= card.Cost;
-        }
-
-        private bool CheckEmptyHand()
-        {
-            return _deckController.Hand.Count <= 0;
-        }
-
-        private bool CheckSwitchTurnConditions()
-        {
-            return CheckEmptyHand() || _playerController.GetEnergy() <= 0;
         }
     }
 }

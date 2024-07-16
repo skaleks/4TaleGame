@@ -21,9 +21,10 @@ namespace UnityProject.Scripts
         public void Start()
         {
             _gameplayUIPresenter.Initialize();
-            _roomController.InstantiateRoom();
+            _roomController.Initialize();
             _playerController.Initialize();
             _enemyController.Initialize();
+            _deckController.Initialize();
             _battleController.Initialize();
         }
     }

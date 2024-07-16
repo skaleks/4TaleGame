@@ -1,4 +1,6 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
 using UnityProject.Scripts.Data;
 using UnityProject.Scripts.Gameplay.Model;
@@ -20,7 +22,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
         
         public void Initialize()
         {
-            _playerView = _characterSpawner.InstantiatePlayer(_roomController.Room.PlayerSpawnPoint.position);
+            _playerView = _characterSpawner.InstantiatePlayer(_roomController.CurrentRoom.PlayerSpawnPoint.position);
             _playerData = new PlayerData
             {
                 Armor = _defaultProfile.PlayerData.Armor,
@@ -30,7 +32,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 MaxHealth = _defaultProfile.PlayerData.MaxHealth
             };
 
-            SetAnimation("Idle", true);
+            PlayAnimation("Idle", false, true);
             ChangeHealthView();
             ChangeArmorView();
         }
@@ -42,6 +44,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
 
             if (_playerData.Health <= 0)
             {
+                PlayAnimation("Dead", true, false);
                 OnPlayerDead?.Invoke();
             }
         }
@@ -67,7 +70,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
         
         public float ChangeArmor(float value)
         {
-            SetAnimation("Skill", false);
+            PlayAnimation("Skill", true, false);
             _playerData.Armor += value;
 
             var restValue = 0f;
@@ -78,7 +81,7 @@ namespace UnityProject.Scripts.Gameplay.Controller
             }
             
             ChangeArmorView();
-            SetAnimation("Idle", true);
+            PlayAnimation("Idle", false, true);
             
             return restValue;
         }
@@ -99,14 +102,44 @@ namespace UnityProject.Scripts.Gameplay.Controller
                 value = ChangeArmor(value);
             }
 
-            SetAnimation("Hit", false);
+            PlayAnimation("Hit", true, false);
+            PlayAnimation("Idle", false, true);
             ChangeHealth(value);
-            SetAnimation("Idle", true);
         }
 
-        public void SetAnimation(string name, bool loop, Character character = null)
+        public async UniTask FinishBattleMove()
+        { 
+            PlayAnimation("Move", false, true);
+
+            var position = _playerView.transform.position;
+            await _playerView.transform.DOMove(position + new Vector3(-position.x, 0, 0), 2f)
+                .AsyncWaitForCompletion()
+                .AsUniTask();
+            
+            PlayAnimation("Idle", false, true);
+        }
+        
+        public async UniTask StartBattleMove()
         {
-            _playerView.SkeletonAnimation.AnimationState.AddAnimation(0, name, loop, 0f);
+            PlayAnimation("Move", false, true);
+            
+            await _playerView.transform.DOMove(_roomController.CurrentRoom.PlayerSpawnPoint.position, 2f)
+                .AsyncWaitForCompletion()
+                .AsUniTask();
+            
+            PlayAnimation("Idle", false, true);
+        }
+
+        public void PlayAnimation(string name, bool replace, bool loop, Character character = null)
+        {
+            if (replace)
+            {
+                _playerView.SkeletonAnimation.AnimationState.SetAnimation(0, name, loop);
+            }
+            else
+            {
+                _playerView.SkeletonAnimation.AnimationState.AddAnimation(0, name, loop, 0f);
+            }
         }
     }
 }

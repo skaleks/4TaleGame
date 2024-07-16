@@ -1,9 +1,9 @@
 ﻿using UnityProject.Scripts.Gameplay.View;
 
-namespace UnityProject.Scripts.Gameplay.Controller
+namespace UnityProject.Scripts.Gameplay
 {
     public interface IAnimationHandler
     {
-        void SetAnimation(string name, bool loop, Character character = null);
+        void PlayAnimation(string name, bool replace ,bool loop, Character character = null);
     }
 }

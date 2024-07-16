@@ -15,7 +15,7 @@ MonoBehaviour:
   _cards:
   - _actionType: 0
     _cost: 1
-    _value: 20
+    _value: 15
     _typeImage: {fileID: 1856826321, guid: 91ece539279118a438c900dfb08582ed, type: 3}
   - _actionType: 1
     _cost: 1
